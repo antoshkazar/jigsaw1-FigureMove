@@ -12,18 +12,34 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
 import java.awt.event.*;
 import java.sql.Array;
+import java.util.Vector;
 
 public class Form extends JFrame implements DragGestureListener {
     private Cell[][] cells;
     private JPanel field;
-    private final JPanel spawnPoint;
+    private JPanel spawnPoint;
+    private JButton newGameButton, exitButton;
+    CheckFigures checkFigures;
+    Vector<Integer> generated;
 
     public Form() {
-        cells = new Cell[Params.WIDTH][Params.HEIGHT];
         this.setSize(430, 330);
         this.setResizable(false);
+        newGameButton = new JButton("New game!");
+
+        setDefaultCloseOperation(EXIT_ON_CLOSE); // Исправить потом на предложение начать заново
+        setLocationRelativeTo(null);
+        setLayout(null);
+        setTitle("Jigsaw");
+        newGame();
+        setVisible(true);
+    }
+
+    void newGame() {
+        cells = new Cell[Params.WIDTH][Params.HEIGHT];
         spawnPoint = new JPanel();
         field = new JPanel();
+        checkFigures = new CheckFigures();
         spawnPoint.setBounds(5 * Params.SIZE, 5 * Params.SIZE, Params.SIZE, Params.SIZE);
         //setBorder(BorderFactory.createLineBorder(Color.black));
         spawnPoint.setSize(Params.SIZE * 2, Params.SIZE * 1);
@@ -32,18 +48,11 @@ public class Form extends JFrame implements DragGestureListener {
         field.setSize(Params.SIZE * 9, Params.SIZE * 9);
         field.setLocation(0, 0);
         setSize(Params.WIDTH * Params.SIZE + 150, Params.HEIGHT * Params.SIZE + 40);
-        setDefaultCloseOperation(EXIT_ON_CLOSE); // Исправить потом на предложение начать заново
-        setLocationRelativeTo(null);
-        setLayout(null);
-        setTitle("Jigsaw");
+        generated = new Vector<>(4);
         initCells();
-        setVisible(true);
-
     }
 
-
     private void initCells() {
-
         for (int i = 0; i < Params.WIDTH; i++) {
             for (int j = 0; j < Params.HEIGHT; j++) {
                 cells[i][j] = new Cell(i, j, false);
@@ -80,25 +89,10 @@ public class Form extends JFrame implements DragGestureListener {
         spawnPoint.setVisible(true);
         //System.out.println(spawnPoint);
         MyDropTargetListener myDropTargetListener = new MyDropTargetListener(field);
-        //MyDropTargetListener[][] myDropTargetListener = new MyDropTargetListener[Params.WIDTH][Params.HEIGHT];
-        // for (int i = 0; i < Params.WIDTH; i++) {
-        //  for (int j = 0; j < Params.HEIGHT; j++) {
-        //myDropTargetListener = new MyDropTargetListener(field);
-        // }
-        // }
         var ds = new DragSource();
         ds.createDefaultDragGestureRecognizer(spawnPoint,
                 DnDConstants.ACTION_COPY, this);
     }
-/*
-    public void seeCurrentFigure(Coord coords, Figure figure) {
-        for (var point : figure.points) {
-            spawnPoint[(int) point.getX()][(int) point.getY()] = new Cell((int) (coords.getX() + point.getX()), (int) (coords.getY() + point.getY()), true);
-            add(spawnPoint[(int) point.getX()][(int) point.getY()]);
-        }
-    }*/
-
-    Point prevPt;
 
     public void dragGestureRecognized(DragGestureEvent event) {
         var cursor = Cursor.getDefaultCursor();
@@ -120,6 +114,124 @@ public class Form extends JFrame implements DragGestureListener {
     }
 
 
+    public class CheckFigures {
+        public CheckFigures() {
+        }
+
+        public boolean checkJ0(int position) {
+            if (field.getComponent(position - 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position - 8).getBackground() != Params.BACKGROUND ||
+                    position % 9 == 0 || (position + 1) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position - 1).setBackground(Color.ORANGE);
+            field.getComponent(position + 1).setBackground(Color.ORANGE);
+            field.getComponent(position - 8).setBackground(Color.ORANGE);
+            return true;
+        }
+
+        public boolean checkJ2(int position) {
+            if (field.getComponent(position - 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 8).getBackground() != Params.BACKGROUND ||
+                    position % 9 == 0 || (position + 1) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position - 1).setBackground(Color.ORANGE);
+            field.getComponent(position + 1).setBackground(Color.ORANGE);
+            field.getComponent(position + 8).setBackground(Color.ORANGE);
+            return true;
+        }
+
+        public boolean checkJ1(int position) {
+            if (field.getComponent(position - 10).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position - 9).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 9).getBackground() != Params.BACKGROUND ||
+                    (position - 9) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position - 10).setBackground(Color.ORANGE);
+            field.getComponent(position - 9).setBackground(Color.ORANGE);
+            field.getComponent(position + 9).setBackground(Color.ORANGE);
+            return true;
+        }
+
+        public boolean checkJ3(int position) {
+            if (field.getComponent(position + 10).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position - 9).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 9).getBackground() != Params.BACKGROUND ||
+                    (position + 9 + 1) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position + 10).setBackground(Color.ORANGE);
+            field.getComponent(position - 9).setBackground(Color.ORANGE);
+            field.getComponent(position + 9).setBackground(Color.ORANGE);
+            return true;
+        }
+
+        public boolean checkL0(int position) {
+            if (field.getComponent(position - 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position - 10).getBackground() != Params.BACKGROUND ||
+                    position % 9 == 0 || (position + 1) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position - 1).setBackground(Color.ORANGE);
+            field.getComponent(position + 1).setBackground(Color.ORANGE);
+            field.getComponent(position - 10).setBackground(Color.ORANGE);
+            return true;
+        }
+
+        public boolean checkL2(int position) {
+            if (field.getComponent(position - 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 1).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 10).getBackground() != Params.BACKGROUND ||
+                    position % 9 == 0 || (position + 1) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position - 1).setBackground(Color.ORANGE);
+            field.getComponent(position + 1).setBackground(Color.ORANGE);
+            field.getComponent(position + 10).setBackground(Color.ORANGE);
+            return true;
+        }
+
+        public boolean checkL1(int position) {
+            if (field.getComponent(position + 10).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position - 9).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 9).getBackground() != Params.BACKGROUND ||
+                    (position - 9) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position + 8).setBackground(Color.ORANGE);
+            field.getComponent(position - 9).setBackground(Color.ORANGE);
+            field.getComponent(position + 9).setBackground(Color.ORANGE);
+            return true;
+        }
+
+        public boolean checkL3(int position) {
+            if (field.getComponent(position - 8).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position - 9).getBackground() != Params.BACKGROUND ||
+                    field.getComponent(position + 9).getBackground() != Params.BACKGROUND ||
+                    (position + 9 + 1) % 9 == 0) {
+                return false;
+            }
+            field.getComponent(position).setBackground(Color.ORANGE);
+            field.getComponent(position - 8).setBackground(Color.ORANGE);
+            field.getComponent(position - 9).setBackground(Color.ORANGE);
+            field.getComponent(position + 9).setBackground(Color.ORANGE);
+            return true;
+        }
+    }
+
+
     private class MyDropTargetListener extends DropTargetAdapter {
 
         private final DropTarget dropTarget;
@@ -130,35 +242,41 @@ public class Form extends JFrame implements DragGestureListener {
             this.panel = panel;
             dropTarget = new DropTarget(panel, DnDConstants.ACTION_MOVE,
                     this, true, null);
-            //System.out.println(dropTarget.getComponent());
-            //this.spawnpoint = spawnpoint;
         }
 
         /*
-    java.awt.Point[x=0,y=0]
-    java.awt.Point[x=0,y=240]
-    java.awt.Point[x=210,y=240]
-    java.awt.Point[x=240,y=240]
+        java.awt.Point[x=0,y=0]
+        java.awt.Point[x=0,y=240]
+        java.awt.Point[x=210,y=240]
+        java.awt.Point[x=240,y=240]
      */
 
-        
+        boolean isPossibleToPaste(Figure figure, int position) {
+            if (field.getComponent(position).getBackground() != Params.BACKGROUND) {
+                return false;
+            }
+            return switch (figure) {
+                case J0 -> checkFigures.checkJ0(position);
+                case J1 -> checkFigures.checkJ1(position);
+                case J2 -> checkFigures.checkJ2(position);
+                case J3 -> checkFigures.checkJ3(position);
+                case L0 -> checkFigures.checkL0(position);
+                case L1 -> checkFigures.checkL1(position);
+                case L2 -> checkFigures.checkL2(position);
+                case L3 -> checkFigures.checkL3(position);
+                default -> true;
+            };
+        }
 
         public void drop(DropTargetDropEvent event) {
             try {
                 var cursorDropped = event.getLocation();
-                System.out.println(cursorDropped);
-                //System.out.println(cursorDropped.x / 30);
                 int position = (int) ((cursorDropped.x / 30) * 9 + cursorDropped.y / 30);
-                System.out.println(position);
-                field.getComponent(position).setBackground(Color.ORANGE);
-                field.getComponent(position - 1).setBackground(Color.ORANGE);
-                field.getComponent(position + 1).setBackground(Color.ORANGE);
-                field.getComponent(position - 8).setBackground(Color.ORANGE);
-
-                event.dropComplete(true);
-
-                return;
-                //event.rejectDrop();
+                if (isPossibleToPaste(Figure.L3, position)) {
+                    event.dropComplete(true);
+                    return;
+                }
+                event.rejectDrop();
             } catch (Exception e) {
                 e.printStackTrace();
                 event.rejectDrop();
@@ -167,7 +285,7 @@ public class Form extends JFrame implements DragGestureListener {
     }
 
 
-    class TransferableColor implements Transferable {
+    static class TransferableColor implements Transferable {
 
         protected static final DataFlavor colorFlavor =
                 new DataFlavor(Color.class, "A Color Object");

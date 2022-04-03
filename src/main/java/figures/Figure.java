@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum Figure {
-    J0(1, 0, 1, 1, 0, 2, 1, 2),
-    J1(0, 0, 0, 1, 1, 1, 2, 1),
-    J2(1, 0, 2, 0, 1, 1, 1, 2),
-    J3(0, 1, 1, 1, 2, 1, 2, 2),
-    L0(0, 2, 0, 1, 0, 0, 1, 2),
-    L1(0, 0, 1, 0, 1, 1, 2, 1),
+    J0,
+    J1,
+    J2,
+    J3,
+    L0,
+    L1,
     L2,
     L3,
     Z0,
@@ -43,6 +43,9 @@ public enum Figure {
         for (int i = 0; i < coordinates.length; i += 2) {
             points.add(new Coord(coordinates[i], coordinates[i + 1]));
         }
+    }
+    void check(){
+
     }
 }
 
