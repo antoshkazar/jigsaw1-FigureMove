@@ -1,9 +1,10 @@
 package figures;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum Figure {
+public enum Figure implements Serializable {
     J0,
     J1,
     J2,
@@ -28,7 +29,7 @@ public enum Figure {
     smallL1,
     smallL2,
     smallL3,
-    singleton(0, 0),
+    singleton,
     I0,
     I1,
     T0,
@@ -39,13 +40,10 @@ public enum Figure {
     public final List<Coord> points;
 
     Figure(int... coordinates) {
-        points = new ArrayList<Coord>();
+        points = new ArrayList<>();
         for (int i = 0; i < coordinates.length; i += 2) {
             points.add(new Coord(coordinates[i], coordinates[i + 1]));
         }
-    }
-    void check(){
-
     }
 }
 

@@ -5,6 +5,7 @@ import java.awt.*;
 
 public class Cell extends JPanel {
     Color color;
+
     Cell(int x, int y, boolean isFigure) {
         if (!isFigure) {
             setBounds(x * Params.SIZE, y * Params.SIZE, Params.SIZE, Params.SIZE);
@@ -23,11 +24,4 @@ public class Cell extends JPanel {
         }
     }
 
-    public void setColor(Color color) {
-        this.setBackground(color);
-    }
-
-    public Color getColor() {
-        return color;
-    }
 }
