@@ -22,6 +22,7 @@ public class Form extends JFrame implements DragGestureListener {
     //Место появления фигур (справа)
     private JPanel spawnPoint;
     JButton finish;
+    int placed;
     private JTextField hostField, portField;
     // Реализую впоследствии.
     // Проверка размещения фигур.
@@ -29,17 +30,13 @@ public class Form extends JFrame implements DragGestureListener {
     //Вектор номеров уже сгенерированных фигур
     Vector<Integer> generated;
     //Рандомно получившаяся фигура
-    Figure currentFigure;
+    public Figure currentFigure;
     Client client;
     // Реализую впоследствии.
     Timer timer;
 
     public Form() {
         this.setSize(600, 460);
-        // contentPane = new JPanel();
-        //contentPane.setSize(600,460);
-        //this.add(contentPane);
-        // this.setContentPane(contentPane);
         this.setResizable(false);
         hostField = new JTextField();
         portField = new JTextField();
@@ -51,17 +48,13 @@ public class Form extends JFrame implements DragGestureListener {
         portField.setLocation(400, 100);
         portField.setSize(100, 40);
         portField.setVisible(true);
-
-        // this.getRootPane().add(portField);
-        //System.out.println(this.getComponent(1));
         this.add(hostField);
         this.add(portField);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(null);
         setTitle("Jigsaw");
-        //newGame();
-        //setVisible(true);
+        newGame();
     }
 
     public void setClient() {
@@ -88,10 +81,10 @@ public class Form extends JFrame implements DragGestureListener {
         field.setBounds(5 * Params.SIZE, 5 * Params.SIZE, Params.SIZE, Params.SIZE);
         field.setSize(Params.SIZE * 9, Params.SIZE * 9);
         field.setLocation(0, 0);
-        setSize(Params.WIDTH * Params.SIZE + 150, Params.HEIGHT * Params.SIZE + 40);
+        //setSize(Params.WIDTH * Params.SIZE + 150, Params.HEIGHT * Params.SIZE + 40);
         generated = new Vector<>(9);
         initCells();
-        generateFigure();
+        //generateFigure();
     }
 
     int total = 1;
@@ -518,8 +511,9 @@ public class Form extends JFrame implements DragGestureListener {
                 int position = (int) ((cursorDropped.x / 30) * 9 + cursorDropped.y / 30);
                 if (isPossibleToPaste(currentFigure, position)) {
                     event.dropComplete(true);
+                    placed++;
                     if (!gameFinished()) {
-                        generateFigure();
+                        client.objectOutputStream.write(placed);
                         //System.out.println(currentFigure);
                     }
                     return;
