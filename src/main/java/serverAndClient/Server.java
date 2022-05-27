@@ -3,7 +3,6 @@ package serverAndClient;
 import figures.Figure;
 import userInterface.Params;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.*;
 import java.net.*;
@@ -11,23 +10,20 @@ import java.util.Random;
 import java.util.Vector;
 
 public class Server extends Thread {
-    private Socket clientSocket;
-    Vector<ClientHandler> clients = new Vector<>();
-    private ServerSocket serverSocket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
-    private int usersMax, timeMax, totalClients = 0;
-    //Вектор номеров уже сгенерированных фигур
+    Vector<ClientInServer> clients = new Vector<>();
+    private final ServerSocket serverSocket;
+    private final int usersMax;
+    private int totalClients = 0;
+    // Вектор номеров уже сгенерированных фигур
     Vector<Integer> generated = new Vector<>();
     Vector<Figure> figures = new Vector<>();
-    //Рандомно получившаяся фигура
+    // Рандомно получившаяся фигура
     Figure currentFigure;
     int total = 1;
 
     public Server(int usersMax, int timeMax) throws IOException {
         serverSocket = new ServerSocket(Params.PORT);
         this.usersMax = usersMax;
-        this.timeMax = timeMax;
     }
 
     /**
@@ -48,9 +44,6 @@ public class Server extends Thread {
 
     /**
      * Получение фигуры по номеру
-     *
-     * @param rand
-     * @return
      */
     private Figure getFigure(int rand) {
         return switch (rand) {
@@ -88,37 +81,31 @@ public class Server extends Thread {
         };
     }
 
-    public void outFigure(Client client) {
-
-    }
 
     @Override
     public void run() {
         try {
-            System.out.println("Server is running " + serverSocket);
+            System.out.println("Сreated server. Socket:  " + serverSocket);
             while (!Thread.interrupted()) {
                 try {
                     Socket socket = serverSocket.accept();
-                    System.out.println("New client request received : " + socket);
-                    var client = new ClientHandler(socket, ++totalClients, this);
+                    System.out.println("New request from client accepted : " + socket);
+                    var client = new ClientInServer(socket, ++totalClients, this);
                     if (clients.size() + 1 > usersMax) {
                         client.cancelConnection();
                         continue;
                     }
                     client.start();
                     clients.add(client);
-                    System.out.println("Created a new handler for client " + totalClients);
-                    in = new ObjectInputStream(socket.getInputStream());
-                    System.out.println(in.read());
+                    System.out.println("Client added on server, created handler for client :" + totalClients);
+                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                     int num = 1;
-                    if (figures.size() < num){
+                    if (figures.size() < num) {
                         generateFigure();
                         figures.add(currentFigure);
                     }
-                    out = new ObjectOutputStream(socket.getOutputStream());
-                    //String w = in.readLine();
-                    //System.out.println(currentFigure);
-                    out.writeObject(figures.get(num-1));
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(figures.get(0));
 
                 } catch (IOException ex) {
                     System.out.println("Creating handler for client " + totalClients + "went with an ERROR");
@@ -129,38 +116,7 @@ public class Server extends Thread {
                 serverSocket.close();
             }
         } catch (IOException ex) {
-            System.out.println("Close server socket error");
+            System.out.println("Socket Error!");
         }
     }
-    /*
-    public void start() {
-        try {
-            server = new ServerSocket(8008);
-            System.out.println("Сервер запущен!");
-            ClientHandler client = new ClientHandler();
-            client.startConnection();
-            clientSocket = server.accept();
-            try { // установив связь и воссоздав сокет для общения с клиентом можно перейти
-                // к созданию потоков ввода/вывода.
-                // теперь мы можем принимать сообщения
-                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                // и отправлять
-                out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-
-                String word = in.readLine(); // ждём пока клиент что-нибудь нам напишет
-                System.out.println(word);
-                // не долго думая отвечает клиенту
-                out.write("Привет, это Сервер! Подтверждаю, вы написали : " + word + "\n");
-                out.flush(); // выталкиваем все из буфера
-
-            } finally { // в любом случае сокет будет закрыт
-                clientSocket.close();
-                // потоки тоже хорошо бы закрыть
-                in.close();
-                out.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }*/
 }
