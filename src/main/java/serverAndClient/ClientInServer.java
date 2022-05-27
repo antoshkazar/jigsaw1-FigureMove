@@ -28,7 +28,7 @@ public class ClientInServer extends Thread {
 
     @Override
     public void run() {
-        while (!isInterrupted()) {
+        while (!isInterrupted()){
         }
         try {
             // closing resources
