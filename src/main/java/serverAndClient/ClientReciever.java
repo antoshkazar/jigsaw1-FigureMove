@@ -1,43 +1,61 @@
 package serverAndClient;
 
+import dto.GameResult;
 import figures.Figure;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.List;
 
 /**
- * Класс, получающий от сервера фигуру для клиента
+ * Класс для общения с сервером
  */
-public class ClientReciever extends Thread {
+public class ClientReciever implements AutoCloseable {
     final Client client;
     final ObjectInputStream objectInputStream;
     final ObjectOutputStream objectOutputStream;
 
     public ClientReciever(Client client) throws IOException {
         this.client = client;
-        this.objectInputStream = new ObjectInputStream(client.socket.getInputStream());
         this.objectOutputStream = new ObjectOutputStream(client.socket.getOutputStream());
+        this.objectInputStream = new ObjectInputStream(client.socket.getInputStream());
     }
 
-    /**
-     * Запускаем поток.
-     */
-    @Override
-    public void run() {
-        while (!isInterrupted()) {
-            try {
-                // Запрашиваем фигуры, пока поле не заполнено
-                do {
-                    // System.out.println(client.figuresRecieved + 1);
-                    objectOutputStream.write(client.figuresRecieved + 1);
-                    client.form.currentFigure = (Figure) objectInputStream.readObject();
-                    client.figuresRecieved++;
-                    System.out.println(client.form.currentFigure);
-                } while (client.form.gameFinished());
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+    public void sendLogin(String login) {
+        try {
+            objectOutputStream.writeObject(login);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+
+    public Figure getFigure(int placed) throws IOException, ClassNotFoundException {
+        objectOutputStream.writeObject("getFigure");
+        objectOutputStream.writeObject(placed);
+        client.form.currentFigure = (Figure) objectInputStream.readObject();
+        // System.out.println(client.form.currentFigure);
+        client.figuresReceived++;
+        System.out.println(client.form.currentFigure);
+        return client.form.currentFigure;
+    }
+
+    public void sendEndGame() {
+        try {
+            objectOutputStream.writeObject("endgame");
+            objectOutputStream.writeObject(client.figuresReceived);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<GameResult> getResults() throws IOException, ClassNotFoundException {
+        objectOutputStream.writeObject("top10");
+        return (List<GameResult>) (objectInputStream.readObject());
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.client.socket.close();
     }
 }

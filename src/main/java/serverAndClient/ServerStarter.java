@@ -1,11 +1,8 @@
 package serverAndClient;
 
-import figures.Coord;
-import userInterface.Form;
 import userInterface.Params;
 
 import javax.swing.*;
-import java.io.IOException;
 
 public class ServerStarter {
     public static void main(String[] args) {

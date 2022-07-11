@@ -3,22 +3,23 @@ package serverAndClient;
 import userInterface.Form;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
 /**
  * Основной класс клиента
  */
-public class Client {
+public class Client implements AutoCloseable {
     public Socket socket;
-    public ObjectOutputStream objectOutputStream;
     // Форма клиента
     public Form form;
     //Количество размещенных клиентом фигур
-    public int figuresRecieved = 0;
+    public int figuresReceived = 0;
+    public ClientReciever clientReciever;
+    private final String login;
 
-    public Client() {
+    public Client(String login) {
+        this.login = login;
     }
 
     /**
@@ -31,11 +32,15 @@ public class Client {
             var parsedPort = Integer.parseInt(port);
             InetAddress ip = InetAddress.getByName(host);
             socket = new Socket(ip, parsedPort);
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             // Класс получателя клиента
-            ClientReciever clientReciever = new ClientReciever(this);
-            clientReciever.start();
+            clientReciever = new ClientReciever(this);
+            clientReciever.sendLogin(login);
         } catch (IOException | NumberFormatException ignored) {
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        clientReciever.close();
     }
 }

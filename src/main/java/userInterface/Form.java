@@ -1,15 +1,23 @@
 package userInterface;
 
+import dto.GameResult;
 import figures.Coord;
 import figures.Figure;
 import serverAndClient.Client;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 
 public class Form extends JFrame implements DragGestureListener {
@@ -22,6 +30,7 @@ public class Form extends JFrame implements DragGestureListener {
     int placed;
     private final JTextField hostField;
     private final JTextField portField;
+    private JButton resultsButton;
     // Реализую впоследствии.
     // Проверка размещения фигур.
     CheckFigures checkFigures;
@@ -30,8 +39,6 @@ public class Form extends JFrame implements DragGestureListener {
     //Рандомно получившаяся фигура
     public Figure currentFigure;
     Client client;
-    // Реализую впоследствии.
-    Timer timer;
 
     public Form() {
         this.setSize(600, 460);
@@ -55,8 +62,16 @@ public class Form extends JFrame implements DragGestureListener {
         newGame();
     }
 
+    public Client getClient() {
+        return client;
+    }
+
+    /**
+     * Задаем клиента для данной формы.
+     */
     public void setClient() {
-        client = new Client();
+        Random random = new Random();
+        client = new Client("login " + random.nextInt(1000));
         portField.setText(String.valueOf(Params.PORT));
         hostField.setText(Params.HOST);
         client.form = this;
@@ -67,6 +82,17 @@ public class Form extends JFrame implements DragGestureListener {
      * Создание поля и точка спавна.
      */
     void newGame() {
+        resultsButton = new JButton("TOP-10");
+        resultsButton.setLocation(400, 150);
+        resultsButton.setSize(100, 40);
+        resultsButton.setVisible(true);
+        add(resultsButton);
+        resultsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showResultsButtonListener();
+            }
+        });
         cells = new Cell[Params.WIDTH][Params.HEIGHT];
         spawnPoint = new JPanel();
         field = new JPanel();
@@ -79,13 +105,9 @@ public class Form extends JFrame implements DragGestureListener {
         field.setBounds(5 * Params.SIZE, 5 * Params.SIZE, Params.SIZE, Params.SIZE);
         field.setSize(Params.SIZE * 9, Params.SIZE * 9);
         field.setLocation(0, 0);
-        //setSize(Params.WIDTH * Params.SIZE + 150, Params.HEIGHT * Params.SIZE + 40);
         generated = new Vector<>(9);
         initCells();
-        //generateFigure();
     }
-
-    int total = 1;
 
     private void initCells() {
         for (int i = 0; i < Params.WIDTH; i++) {
@@ -103,15 +125,14 @@ public class Form extends JFrame implements DragGestureListener {
      */
     public void seeCurrentCell(Coord coords) {
         try {
-
             add(spawnPoint);
-            for (var point : currentFigure.points) {
+            if (currentFigure != null) for (var point : currentFigure.points) {
                 spawnPoint.add(new Cell((int) (coords.getX() + point.getX()), (int) (coords.getY() + point.getY()), true));
             }
             add(field);
-            field.setBackground(Color.GRAY);
+            field.setBackground(Params.BACKGROUND);
             field.setVisible(true);
-            spawnPoint.setBackground(Color.WHITE);
+            spawnPoint.setBackground(Params.BACKGROUND);
             spawnPoint.setVisible(true);
             MyDropTargetListener myDropTargetListener = new MyDropTargetListener(field);
             var ds = new DragSource();
@@ -119,6 +140,25 @@ public class Form extends JFrame implements DragGestureListener {
                     DnDConstants.ACTION_COPY, this);
         } catch (Exception ignored) {
 
+        }
+    }
+
+    /**
+     * Метод отслеживания нажатия на кнопку Топ-10.
+     */
+    public void showResultsButtonListener() {
+        try {
+            List<GameResult> results = client.clientReciever.getResults();
+            System.out.println(results);
+            for (GameResult result : results) {
+                // time in user's time zone
+                String localDateTime = result.getEndTime().atZone(ZoneId.systemDefault()).toString();
+            }
+            if (results.size() > 0) {
+                JOptionPane.showMessageDialog(this, results);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
@@ -402,10 +442,10 @@ public class Form extends JFrame implements DragGestureListener {
     public boolean gameFinished() {
         for (int i = 0; i < field.getComponentCount(); i++) {
             if (field.getComponent(i).getBackground() == Params.BACKGROUND) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     private class MyDropTargetListener extends DropTargetAdapter {
@@ -452,7 +492,6 @@ public class Form extends JFrame implements DragGestureListener {
 
         /**
          * Фигура отпущена
-         *
          */
         public void drop(DropTargetDropEvent event) {
             try {
@@ -461,6 +500,17 @@ public class Form extends JFrame implements DragGestureListener {
                 if (isPossibleToPaste(currentFigure, position)) {
                     event.dropComplete(true);
                     placed++;
+                    // Если пользователь успешно разместил фигуру,
+                    // проверяем условия окончания игры и запрашиваем следующую фигуру
+                    if (gameFinished()) {
+                        System.out.println("finish");
+                        JOptionPane.showMessageDialog(null, "Game over!");
+                        client.clientReciever.sendEndGame();
+                        client.close();
+                        client.form.dispose();
+                        return;
+                    }
+                    client.clientReciever.getFigure(placed);
                     return;
                 }
                 event.rejectDrop();

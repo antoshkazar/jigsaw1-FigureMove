@@ -13,4 +13,12 @@
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.15.2.0</version>
+        </dependency>
+    </dependencies>
+
 </project>

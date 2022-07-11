@@ -7,9 +7,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Zaripov_Anton_203_HW6 2" />
+        <module name="dz7" />
+        <module name="dz7-4" />
         <module name="jigsaw1" />
-        <module name="Zaripov_Anton_203_HW6" />
         <module name="jigsaw1-master" />
+        <module name="Zaripov_Anton_203_HW6" />
+        <module name="Zaripov_Anton_HW7" />
       </profile>
     </annotationProcessing>
   </component>

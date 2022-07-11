@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Все реализованные фигуры.
+ */
 public enum Figure implements Serializable {
     J0,
     J1,
